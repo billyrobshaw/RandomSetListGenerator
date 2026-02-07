@@ -6,5 +6,5 @@ The system will allow the user to input data such as Artist, SongTitle, Lyrics, 
 
 This data will display on the web page and allow the person playing an instrument to play to know the chords for the song and the Lyrics.
 
-All the different songs will be stored in a database and the aim is to randomize through these and them to display for the length of the song plus 20 seconds to allow a rest/effect changes.
+All the different songs will be stored in a database and the aim is to randomise through these and them to display for the length of the song plus 20 seconds to allow a rest/effect changes.
 
