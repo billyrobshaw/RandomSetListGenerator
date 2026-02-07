@@ -20,6 +20,7 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
+//https://localhost:7169/swagger/index.html
 app.UseSwagger();
 app.UseSwaggerUI();
 

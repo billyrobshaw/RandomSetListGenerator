@@ -67,5 +67,24 @@ namespace MusicApp.API.Controllers
 
             return Ok(new { message = "Song added successfully!", id = music.Id });
         }
+
+        [HttpGet("/artist/{artist}")]
+        public async Task<ActionResult<IEnumerable<MusicDto>>> GetArtist(string artist)
+        {
+            var result = await _context.Musics.Where(m => m.Artist == artist).Select(m => new MusicDto
+            {
+                Id = m.Id,
+                Artist = m.Artist,
+                SongTitle = m.SongTitle,
+                Lyrics = m.Lyrics,
+                Chords = m.Chords,
+                Duration = (TimeSpan)m.Duration
+            }).ToListAsync();
+
+            if (!result.Any())
+                return NotFound($"No songs found for artist '{artist}'.");
+
+            return Ok(result);
+        }
     }
 }
