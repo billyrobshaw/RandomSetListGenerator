@@ -6,7 +6,7 @@ using MusicApp.API.Models;
 namespace MusicApp.API.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/music")]
     public class MusicController : ControllerBase
     {
         private readonly AppDbContext _context;
@@ -68,7 +68,7 @@ namespace MusicApp.API.Controllers
             return Ok(new { message = "Song added successfully!", id = music.Id });
         }
 
-        [HttpGet("/artist/{artist}")]
+        [HttpGet("artist/{artist}")]
         public async Task<ActionResult<IEnumerable<MusicDto>>> GetArtist(string artist)
         {
             var result = await _context.Musics.Where(m => m.Artist == artist).Select(m => new MusicDto

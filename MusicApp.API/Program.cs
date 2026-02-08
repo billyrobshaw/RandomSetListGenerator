@@ -9,9 +9,11 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 var connString = builder.Configuration.GetConnectionString("MusicAppDbConnection");
 
+builder.Services.AddHttpClient();
 builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlServer(connString)
                     .ConfigureWarnings(warnings =>
                     warnings.Ignore(RelationalEventId.PendingModelChangesWarning)));
+
 
 builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
@@ -25,6 +27,9 @@ app.UseSwagger();
 app.UseSwaggerUI();
 
 app.MapOpenApi();
+
+app.UseDefaultFiles(); // Looks for index.html by default
+app.UseStaticFiles();
 
 app.UseHttpsRedirection();
 

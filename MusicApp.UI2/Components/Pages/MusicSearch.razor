@@ -1,0 +1,70 @@
+﻿@page "/"
+@using MusicApp.UI2.Models
+@using MusicApp.UI2.Services
+@inject MusicService MusicService
+@inject IJSRuntime JS
+
+<h3>All Music</h3>
+
+@if (loading)
+{
+    <p>Loading music...</p>
+}
+else if (music != null && music.Count > 0)
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Song Title</th>
+                <th>Artist</th>
+                <th>Lyrics</th>
+                <th>Chords</th>
+                <th>Duration</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var song in music)
+            {
+                <tr>
+                    <td>@song.SongTitle</td>
+                    <br />
+                    <td>@song.Artist</td>
+                    <br />
+                    <td>@song.Lyrics</td>
+                    <br />
+                    <br />
+                    <br />
+                    <td>@song.Chords</td>
+                    <br />
+                    <td>@song.Duration.ToString(@"hh\:mm\:ss")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <p>No music found.</p>
+}
+
+@code {
+    private List<MusicDto>? music;
+    private bool loading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            // Call your API
+            music = await MusicService.GetAllMusic();
+        }
+        catch (Exception ex)
+        {
+            await JS.InvokeVoidAsync("alert", $"Error fetching music: {ex.Message}");
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+}

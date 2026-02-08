@@ -1,9 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.14.36518.9 d17.14
+VisualStudioVersion = 17.14.36518.9
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MusicApp.API", "MusicApp.API\MusicApp.API.csproj", "{A2F38FA1-ACDD-4B0F-BDDD-8F1C5B90D5B7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MusicApp.UI2", "MusicApp.UI2\MusicApp.UI2.csproj", "{24A0A32B-379C-41FA-A0C5-E4741DB31D34}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{A2F38FA1-ACDD-4B0F-BDDD-8F1C5B90D5B7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A2F38FA1-ACDD-4B0F-BDDD-8F1C5B90D5B7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A2F38FA1-ACDD-4B0F-BDDD-8F1C5B90D5B7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{24A0A32B-379C-41FA-A0C5-E4741DB31D34}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{24A0A32B-379C-41FA-A0C5-E4741DB31D34}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{24A0A32B-379C-41FA-A0C5-E4741DB31D34}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{24A0A32B-379C-41FA-A0C5-E4741DB31D34}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
