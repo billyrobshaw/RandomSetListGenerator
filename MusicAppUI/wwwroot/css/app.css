@@ -57,14 +57,15 @@ h1:focus {
     border-left: 4px solid #ffc107;
     font-size: 0.9rem;
 }
+
 .music-card {
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.music-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
-}
+    .music-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+    }
 
 .lyrics-box {
     background: #f8f9fa;

@@ -20,6 +20,18 @@ builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 builder.Services.AddSwaggerGen();
 
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        policy.AllowAnyOrigin()   // or restrict to "https://localhost:5002"
+              .AllowAnyMethod()
+              .AllowAnyHeader();
+    });
+});
+
+
+
 var app = builder.Build();
 
 //https://localhost:7169/swagger/index.html
@@ -34,6 +46,8 @@ app.UseStaticFiles();
 app.UseHttpsRedirection();
 
 app.UseAuthorization();
+
+app.UseCors();
 
 app.MapControllers();
 

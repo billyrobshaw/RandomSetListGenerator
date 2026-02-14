@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MusicApp.API", "MusicApp.AP
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MusicApp.UI2", "MusicApp.UI2\MusicApp.UI2.csproj", "{24A0A32B-379C-41FA-A0C5-E4741DB31D34}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MusicAppUI", "MusicAppUI\MusicAppUI.csproj", "{3B595FBF-330C-418B-83DC-948E9EB3B582}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{24A0A32B-379C-41FA-A0C5-E4741DB31D34}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{24A0A32B-379C-41FA-A0C5-E4741DB31D34}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{24A0A32B-379C-41FA-A0C5-E4741DB31D34}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3B595FBF-330C-418B-83DC-948E9EB3B582}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3B595FBF-330C-418B-83DC-948E9EB3B582}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3B595FBF-330C-418B-83DC-948E9EB3B582}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3B595FBF-330C-418B-83DC-948E9EB3B582}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

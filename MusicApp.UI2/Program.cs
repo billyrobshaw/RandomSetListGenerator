@@ -13,6 +13,7 @@ builder.Services.AddRazorComponents()
 builder.Services.AddScoped(sp =>
     new HttpClient { BaseAddress = new Uri("https://localhost:7169/") }); // your API URL
 builder.Services.AddScoped<MusicService>();
+builder.Services.AddScoped<BlazorTimer>();
 
 var app = builder.Build();
 

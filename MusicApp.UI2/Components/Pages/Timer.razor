@@ -1,0 +1,14 @@
+﻿@page "/timer"
+@using MusicApp.UI2.Services
+@inject MusicApp.UI2.Services.BlazorTimer Timers
+@inject NavigationManager NavManager
+
+<h1>Blazor Timer</h1>
+
+@code {
+    
+    protected override async Task OnInitializedAsync()
+    {
+        Console.WriteLine("Timer page initialized.");
+    }
+}

@@ -4,67 +4,116 @@
 @inject MusicService MusicService
 @inject IJSRuntime JS
 
-
-@*Design this page*@
 @if (loading)
 {
-    <p>Loading music...</p>
+    <div class="text-center mt-5">
+        <div class="spinner-border text-primary"></div>
+        <p class="mt-2">Loading music...</p>
+    </div>
 }
 else if (music != null && music.Count > 0)
 {
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th>Song Title</th>
-                <th>Artist</th>
-                <th>Lyrics</th>
-                <th>Chords</th>
-                <th>Duration</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var song in music)
-            {
-                <tr>
-                    <td>@song.SongTitle</td>
-                    <br />
-                    <td>@song.Artist</td>
-                    <br />
-                    <td>@song.Lyrics</td>
-                    <br />
-                    <br />
-                    <br />
-                    <td>@song.Chords</td>
-                    <br />
-                    <td>@song.Duration.ToString(@"hh\:mm\:ss")</td>
-                </tr>
-            }
-        </tbody>
-    </table>
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="card shadow-sm text-center p-4">
+
+                    <h2 class="fw-bold">@music[currentIndex].SongTitle</h2>
+                    <h5 class="text-muted">@music[currentIndex].Artist</h5>
+
+                    <div class="lyrics-box mt-4 mx-auto">
+                        <pre class="lyrics-text">@music[currentIndex].Lyrics</pre>
+                    </div>
+
+                    @if (!string.IsNullOrWhiteSpace(music[currentIndex].Chords))
+                    {
+                        <div class="chords-box mt-4 mx-auto">
+                            <strong>Chords</strong>
+                            <div class="mt-2">@music[currentIndex].Chords</div>
+                        </div>
+                    }
+
+                    <p class="small text-muted mt-2">
+                        ⏱ Duration: @music[currentIndex].Duration.ToString(@"mm\:ss")
+                    </p>
+
+                    <p class="fw-bold text-danger">
+                        ⏳ Time Remaining: @remainingTime.ToString(@"mm\:ss")
+                    </p>
+
+                </div>
+            </div>
+        </div>
+    </div>
 }
 else
 {
-    <p>No music found.</p>
+    <div class="text-center mt-5">
+        <p class="text-muted">No music found.</p>
+    </div>
 }
 
 @code {
     private List<MusicDto>? music;
     private bool loading = true;
+    private int currentIndex = 0;
+    private TimeSpan remainingTime;
+    private CancellationTokenSource? cts;
+    private bool clientReady = false;
 
     protected override async Task OnInitializedAsync()
     {
-        try
+        // Load music from API
+        music = await MusicService.GetAllMusic();
+        loading = false;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && music != null && music.Count > 0)
         {
-            // Call your API
-            music = await MusicService.GetAllMusic();
+            clientReady = true;
+            cts = new CancellationTokenSource();
+
+            // Now safe to call JS
+            await JS.InvokeVoidAsync("console.log", "Client fully rendered - countdown starting");
+
+            // Fire and forget song loop
+            _ = RunSongsAsync(cts.Token);
         }
-        catch (Exception ex)
+    }
+
+    private async Task RunSongsAsync(CancellationToken token)
+    {
+        if (!clientReady) return; // ensure JS is available
+
+        while (!token.IsCancellationRequested)
         {
-            await JS.InvokeVoidAsync("alert", $"Error fetching music: {ex.Message}");
+            remainingTime = music![currentIndex].Duration;
+
+            // Browser console log
+            await JS.InvokeVoidAsync("console.log", $"Playing {music[currentIndex].SongTitle}, Duration: {remainingTime}");
+
+            while (remainingTime.TotalSeconds > 0 && !token.IsCancellationRequested)
+            {
+                await Task.Delay(1000, token);
+                remainingTime = remainingTime.Subtract(TimeSpan.FromSeconds(1));
+
+                // Force UI update
+                await InvokeAsync(StateHasChanged);
+
+                await JS.InvokeVoidAsync("console.log", $"Remaining: {remainingTime}");
+            }
+
+            currentIndex++;
+            if (currentIndex >= music.Count)
+                currentIndex = 0;
         }
-        finally
-        {
-            loading = false;
-        }
+    }
+
+    public void Dispose()
+    {
+        cts?.Cancel();
+        cts?.Dispose();
     }
 }

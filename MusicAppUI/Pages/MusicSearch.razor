@@ -1,0 +1,145 @@
+﻿@page "/"
+@using MusicApp.UI2.Models
+@using MusicApp.UI2.Services
+@inject MusicService MusicService
+@inject IJSRuntime JS
+@implements IDisposable
+
+@if (loading)
+{
+    <div class="text-center mt-5">
+        <div class="spinner-border text-primary"></div>
+        <p class="mt-2">Loading music...</p>
+    </div>
+}
+else if (music != null && music.Count > 0)
+{
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="card shadow-sm text-center p-4">
+
+                    <h2 class="fw-bold">@music[currentIndex].SongTitle</h2>
+                    <h5 class="text-muted">@music[currentIndex].Artist</h5>
+
+                    <div class="lyrics-box mt-4 mx-auto">
+                        <pre class="lyrics-text">@music[currentIndex].Lyrics</pre>
+                    </div>
+
+                    @if (!string.IsNullOrWhiteSpace(music[currentIndex].Chords))
+                    {
+                        <div class="chords-box mt-4 mx-auto">
+                            <strong>Chords</strong>
+                            <div class="mt-2">@music[currentIndex].Chords</div>
+                        </div>
+                    }
+
+                    <p class="small text-muted mt-2">
+                        ⏱ Duration: @music[currentIndex].Duration.ToString(@"mm\:ss")
+                    </p>
+
+                    <p class="fw-bold text-danger">
+                        ⏳ Time Remaining: @remainingTime.ToString(@"mm\:ss")
+                    </p>
+
+                    @if (showTransitionMessage)
+                    {
+                        <p class="fw-bold text-primary mt-3">
+                            🎵 Get ready for the next song...
+                        </p>
+                        <p class="text-muted">Next song starts in @transitionRemaining seconds</p>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private List<MusicDto>? music;
+    private bool loading = true;
+    private int currentIndex = 0;
+    private TimeSpan remainingTime;
+    private CancellationTokenSource? cts;
+
+    // NEW: transition state
+    private bool showTransitionMessage = false;
+    private int transitionRemaining = 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Console.WriteLine("STEP 1: OnInitializedAsync started");
+
+        music = await MusicService.GetAllMusic();
+        loading = false;
+
+        Console.WriteLine($"STEP 1: Music loaded? {music != null}, Count = {music?.Count}");
+
+        if (music != null && music.Count > 0)
+        {
+            Console.WriteLine("STEP 1: Starting timer loop from OnInitializedAsync");
+            cts = new CancellationTokenSource();
+            _ = PlaySongsLoop(cts.Token);
+        }
+    }
+
+    private async Task PlaySongsLoop(CancellationToken token)
+    {
+        Console.WriteLine("STEP 3: Entered PlaySongsLoop");
+
+        try
+        {
+            while (!token.IsCancellationRequested)
+            {
+                var song = music![currentIndex];
+                remainingTime = song.Duration;
+
+                Console.WriteLine($"STEP 3: Song '{song.SongTitle}' duration = {remainingTime}");
+
+                if (remainingTime.TotalSeconds <= 0)
+                    remainingTime = TimeSpan.FromSeconds(1);
+
+                // SONG COUNTDOWN
+                while (remainingTime.TotalSeconds > 0 && !token.IsCancellationRequested)
+                {
+                    Console.WriteLine($"TICK: {remainingTime:mm\\:ss}");
+                    await Task.Delay(1000, token);
+                    remainingTime -= TimeSpan.FromSeconds(1);
+                    await InvokeAsync(StateHasChanged);
+                }
+
+                Console.WriteLine("STEP 3: Song finished");
+
+                // 15 SECOND TRANSITION
+                showTransitionMessage = true;
+                transitionRemaining = 15;
+                await InvokeAsync(StateHasChanged);
+
+                while (transitionRemaining > 0 && !token.IsCancellationRequested)
+                {
+                    Console.WriteLine($"Transition countdown: {transitionRemaining}");
+                    await Task.Delay(1000, token);
+                    transitionRemaining--;
+                    await InvokeAsync(StateHasChanged);
+                }
+
+                showTransitionMessage = false;
+
+                // MOVE TO NEXT SONG
+                currentIndex = (currentIndex + 1) % music.Count;
+                Console.WriteLine("STEP 3: Moving to next song");
+            }
+        }
+        catch (TaskCanceledException)
+        {
+            Console.WriteLine("STEP 3: Timer cancelled");
+        }
+    }
+
+    public void Dispose()
+    {
+        Console.WriteLine("STEP 4: Component disposing, cancelling token");
+        cts?.Cancel();
+        cts?.Dispose();
+    }
+}
