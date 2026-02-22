@@ -5,11 +5,16 @@
 @inject IJSRuntime JS
 @implements IDisposable
 
-@if (loading)
+@if (showIntro)
 {
     <div class="text-center mt-5" style="background-color: #fff7e6;">
-        <div class="spinner-border text-primary"></div>
-        <p class="mt-2">Loading music...</p>
+        <h3 class="fw-bold">🎵 Preparing your first song...</h3>
+        <p class="mt-3">Starting in @introCountdown seconds</p>
+
+        <p class="mt-4">
+            👉 <strong>First Song:</strong> @music[currentIndex].SongTitle<br />
+            <span class="text-muted">@music[currentIndex].Artist</span>
+        </p>
     </div>
 }
 else if (music != null && music.Count > 0)
@@ -40,7 +45,17 @@ else if (music != null && music.Count > 0)
                         🎵 Get ready for the next song...
                     </p>
                     <p class="text-muted">Next song starts in @transitionRemaining seconds</p>
+
+                    @if (nextIndex != null)
+                    {
+                        <p class="mt-3">
+                            👉 <strong>Coming Up:</strong> @music[nextIndex.Value].SongTitle
+                            <br />
+                            <span class="text-muted">@music[nextIndex.Value].Artist</span>
+                        </p>
+                    }
                 }
+
 
             </div>
         </div>
@@ -67,6 +82,11 @@ else if (music != null && music.Count > 0)
     private bool loading = true;
     private int currentIndex = 0;
     private TimeSpan remainingTime;
+    private int? nextIndex = null;
+    private bool showIntro = true;
+    private int introCountdown = 10;
+
+
     private CancellationTokenSource? cts;
 
     // NEW: transition state
@@ -80,20 +100,30 @@ else if (music != null && music.Count > 0)
         music = await MusicService.GetAllMusic();
         loading = false;
 
-        Console.WriteLine($"STEP 1: Music loaded? {music != null}, Count = {music?.Count}");
-
         if (music != null && music.Count > 0)
         {
-            // Pick a random starting song
             var rnd = new Random();
             currentIndex = rnd.Next(0, music.Count);
 
-            Console.WriteLine($"STEP 1: Starting with random song index {currentIndex}");
+            // Show intro message for 10 seconds
+            introCountdown = 10;
+            showIntro = true;
 
+            while (introCountdown > 0)
+            {
+                await Task.Delay(1000);
+                introCountdown--;
+                await InvokeAsync(StateHasChanged);
+            }
+
+            showIntro = false;
+
+            // Start the normal loop
             cts = new CancellationTokenSource();
             _ = PlaySongsLoop(cts.Token);
         }
     }
+
 
 
     private async Task PlaySongsLoop(CancellationToken token)
@@ -141,7 +171,13 @@ else if (music != null && music.Count > 0)
                 // 15 SECOND TRANSITION
                 showTransitionMessage = true;
                 transitionRemaining = 15;
+
+                // NEW: pick next song early
+                var rnd = new Random();
+                nextIndex = rnd.Next(0, music.Count);
+
                 await InvokeAsync(StateHasChanged);
+
 
                 while (transitionRemaining > 0 && !token.IsCancellationRequested)
                 {
@@ -153,8 +189,8 @@ else if (music != null && music.Count > 0)
 
                 showTransitionMessage = false;
 
-                var rnd = new Random();
-                currentIndex = rnd.Next(0, music.Count);
+                currentIndex = nextIndex ?? new Random().Next(0, music.Count);
+                nextIndex = null;
 
                 // Reset scroll for the new song
                 await JS.InvokeVoidAsync("resetLyricsScroll", "lyricsBox", 0.5);
