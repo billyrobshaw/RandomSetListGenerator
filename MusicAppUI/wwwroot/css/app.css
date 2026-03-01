@@ -11,10 +11,9 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 10px 20px 40px; /* smaller top padding */
+    padding: 10px 20px 40px; 
+    max-height: 3000vh;/* smaller top padding */
 }
-
-
 
 /* Centers the card */
 .content-wrapper {
@@ -258,6 +257,57 @@ textarea.form-control-lg {
         transform: translateY(0);
     }
 }
+.page-layout {
+    display: flex;
+    width: 100%;
+    height: 100vh; /* full screen height */
+    overflow: hidden; /* prevents layout shifting */
+}
+
+.queue-panel {
+    width: 260px;
+    background: #f7f7f7;
+    border-right: 1px solid #ddd;
+    padding: 20px;
+    overflow-y: auto; /* enables scrolling */
+    max-height: 95vh; /* prevents it from growing past screen */
+    box-sizing: border-box;
+    flex-shrink: 0; /* prevents shrinking */
+    text-align: left; /* ensures left alignment */
+}
+
+.main-content {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+}
+
+.queue-item {
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    border-radius: 8px;
+    cursor: default;
+}
+
+.queue-item .artist {
+    font-size: 0.85rem;
+    color: #666;
+}
+
+.queue-item.current {
+    background: #dbeafe;
+    border-left: 4px solid #3b82f6;
+}
+
+.queue-item.played {
+    opacity: 0.5;
+}
+
+.queue-item.upcoming {
+    background: #fff;
+}
+
+
 
 
 

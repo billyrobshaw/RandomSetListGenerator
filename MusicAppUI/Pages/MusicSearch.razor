@@ -6,78 +6,97 @@
 @inject NavigationManager Nav
 @implements IDisposable
 
-@if (showIntro)
-{
-    <div class="intro-wrapper">
-        <div class="intro-card">
+<div class="page-layout">
+    <div class="queue-panel">
+        @if (music != null)
+        {
+            @foreach (var i in Enumerable.Range(0, playOrder.Count))
+            {
+                var index = playOrder[i];
+                var song = music[index];
 
-            <h2 class="intro-title">Preparing your first song</h2>
-
-            <p class="intro-subtitle">
-                Starting in <strong>@introCountdown</strong> seconds
-            </p>
-
-            <div class="intro-details">
-                <p class="intro-label"><strong>First Song:</strong></p>
-                <p class="intro-song">@music[currentIndex].SongTitle</p>
-                <p class="intro-artist">@music[currentIndex].Artist</p>
-            </div>
-
-        </div>
+                <div class="queue-item @(i == playOrderPosition ? "current" : i < playOrderPosition ? "played" : "upcoming")">
+                    <strong>@song.SongTitle</strong><br />
+                    <span class="artist">@song.Artist</span>
+                </div>
+            }
+        }
     </div>
-}
-else if (music != null && music.Count > 0)
-{
-    <div class="page-wrapper">
-        <div class="content-wrapper">
 
-            <div class="music-card shadow-sm text-center">
+    <div class="main-content">
 
-                <h2>@music[currentIndex].SongTitle</h2>
-                <h5>@music[currentIndex].Artist</h5>
+        @if (showIntro)
+        {
+            <div class="intro-wrapper">
+                <div class="intro-card">
+                    <h2 class="intro-title">Preparing your first song</h2>
 
-                <div id="lyricsBox" class="lyrics-box mt-4">
-                    <pre class="lyrics-text">@music[currentIndex].Lyrics</pre>
+                    <p class="intro-subtitle">
+                        Starting in <strong>@introCountdown</strong> seconds
+                    </p>
+
+                    <div class="intro-details">
+                        <p class="intro-label"><strong>First Song:</strong></p>
+                        <p class="intro-song">@music[currentIndex].SongTitle</p>
+                        <p class="intro-artist">@music[currentIndex].Artist</p>
+                    </div>
+                </div>
+            </div>
+        }
+        else if (music != null && music.Count > 0)
+        {
+            <div class="page-wrapper">
+                <div class="content-wrapper">
+
+                    <div class="music-card shadow-sm text-center">
+
+                        <h2>@music[currentIndex].SongTitle</h2>
+                        <h5>@music[currentIndex].Artist</h5>
+
+                        <div id="lyricsBox" class="lyrics-box mt-4">
+                            <pre class="lyrics-text">@music[currentIndex].Lyrics</pre>
+                        </div>
+
+                        @if (!string.IsNullOrWhiteSpace(music[currentIndex].Chords))
+                        {
+                            <div class="chords-box mx-auto">
+                                <strong>Chords</strong>
+                                <div class="mt-2">@music[currentIndex].Chords</div>
+                            </div>
+                        }
+
+                        @if (showTransitionMessage)
+                        {
+                            <p class="fw-bold text-primary mt-4">🎵 Get ready for the next song...</p>
+                            <p class="text-muted">Next song starts in @transitionRemaining seconds</p>
+
+                            @if (nextIndex != null)
+                            {
+                                <p class="mt-2">
+                                    👉 <strong>Coming Up:</strong> @music[nextIndex.Value].SongTitle<br />
+                                    <span class="text-muted">@music[nextIndex.Value].Artist</span>
+                                </p>
+                            }
+                        }
+
+                    </div>
                 </div>
 
-                @if (!string.IsNullOrWhiteSpace(music[currentIndex].Chords))
-                {
-                    <div class="chords-box mx-auto">
-                        <strong>Chords</strong>
-                        <div class="mt-2">@music[currentIndex].Chords</div>
+                <div class="footer-info">
+                    <p class="text-muted">⏱ Duration: @music[currentIndex].Duration.ToString(@"mm\:ss")</p>
+                    <p class="fw-bold text-danger">⏳ Time Remaining: @remainingTime.ToString(@"mm\:ss")</p>
+
+                    <div class="footer-buttons">
+                        <button class="btn btn-primary" @onclick="GoToInsertPage">➕ Add New Song</button>
+                        <button class="btn btn-primary" @onclick="SkipSong">⏭ Skip</button>
                     </div>
-                }
-
-                @if (showTransitionMessage)
-                {
-                    <p class="fw-bold text-primary mt-4">🎵 Get ready for the next song...</p>
-                    <p class="text-muted">Next song starts in @transitionRemaining seconds</p>
-
-                    @if (nextIndex != null)
-                    {
-                        <p class="mt-2">
-                            👉 <strong>Coming Up:</strong> @music[nextIndex.Value].SongTitle<br />
-                            <span class="text-muted">@music[nextIndex.Value].Artist</span>
-                        </p>
-                    }
-                }
+                </div>
 
             </div>
-        </div>
-
-        <div class="footer-info">
-            <p class="text-muted">⏱ Duration: @music[currentIndex].Duration.ToString(@"mm\:ss")</p>
-            <p class="fw-bold text-danger">⏳ Time Remaining: @remainingTime.ToString(@"mm\:ss")</p>
-
-            <div class="footer-buttons">
-                <button class="btn btn-primary" @onclick="GoToInsertPage">➕ Add New Song</button>
-                <button class="btn btn-primary" @onclick="SkipSong">⏭ Skip</button>
-            </div>
-
-        </div>
+        }
 
     </div>
-}
+</div>
 
 @code {
     private List<MusicDto>? music;
@@ -87,6 +106,9 @@ else if (music != null && music.Count > 0)
     private int? nextIndex = null;
     private bool showIntro = true;
     private int introCountdown = 10;
+
+    private List<int> playOrder = new();
+    private int playOrderPosition = 0;
 
     private CancellationTokenSource? cts;
     private bool showTransitionMessage = false;
@@ -101,8 +123,8 @@ else if (music != null && music.Count > 0)
 
         if (music != null && music.Count > 0)
         {
-            var rnd = new Random();
-            currentIndex = rnd.Next(0, music.Count);
+            GeneratePlayOrder();
+            currentIndex = playOrder[playOrderPosition];
 
             introCountdown = 10;
             showIntro = true;
@@ -124,9 +146,7 @@ else if (music != null && music.Count > 0)
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
-        {
             firstRenderComplete = true;
-        }
     }
 
     private async Task PlaySongsLoop(CancellationToken token)
@@ -150,12 +170,10 @@ else if (music != null && music.Count > 0)
 
                 double scrollDistance = scrollInfo.scrollHeight - scrollInfo.clientHeight;
                 double totalSeconds = song.Duration.TotalSeconds;
-
                 if (totalSeconds < 1) totalSeconds = 1;
 
                 double pixelsPerSecond = scrollDistance / totalSeconds;
                 double pixelsPerTick = pixelsPerSecond * 0.125;
-
                 if (pixelsPerTick < 0.5)
                     pixelsPerTick = 0.5;
 
@@ -173,8 +191,11 @@ else if (music != null && music.Count > 0)
                 showTransitionMessage = true;
                 transitionRemaining = 15;
 
-                var rnd = new Random();
-                nextIndex = rnd.Next(0, music.Count);
+                playOrderPosition++;
+                if (playOrderPosition >= playOrder.Count)
+                    GeneratePlayOrder();
+
+                nextIndex = playOrder[playOrderPosition];
 
                 await InvokeAsync(StateHasChanged);
 
@@ -187,16 +208,14 @@ else if (music != null && music.Count > 0)
 
                 showTransitionMessage = false;
 
-                currentIndex = nextIndex ?? new Random().Next(0, music.Count);
+                currentIndex = nextIndex.Value;
                 nextIndex = null;
 
                 if (firstRenderComplete)
                     await JS.InvokeVoidAsync("resetLyricsScroll", "lyricsBox");
             }
         }
-        catch (TaskCanceledException)
-        {
-        }
+        catch (TaskCanceledException) { }
     }
 
     public void Dispose()
@@ -210,15 +229,33 @@ else if (music != null && music.Count > 0)
         cts?.Cancel();
         cts?.Dispose();
 
-        var rnd = new Random();
-        currentIndex = rnd.Next(0, music!.Count);
+        playOrderPosition++;
+        if (playOrderPosition >= playOrder.Count)
+            GeneratePlayOrder();
+
+        nextIndex = playOrder[playOrderPosition];
+
+        showTransitionMessage = true;
+        transitionRemaining = 10;
+
+        await InvokeAsync(StateHasChanged);
+
+        while (transitionRemaining > 0)
+        {
+            await Task.Delay(1000);
+            transitionRemaining--;
+            await InvokeAsync(StateHasChanged);
+        }
+
+        showTransitionMessage = false;
+
+        currentIndex = nextIndex.Value;
+        nextIndex = null;
 
         if (firstRenderComplete)
             await JS.InvokeVoidAsync("resetLyricsScroll", "lyricsBox");
 
         remainingTime = music[currentIndex].Duration;
-
-        showTransitionMessage = false;
 
         cts = new CancellationTokenSource();
         _ = PlaySongsLoop(cts.Token);
@@ -235,5 +272,13 @@ else if (music != null && music.Count > 0)
     {
         public double scrollHeight { get; set; }
         public double clientHeight { get; set; }
+    }
+
+    private void GeneratePlayOrder()
+    {
+        playOrder = Enumerable.Range(0, music!.Count).ToList();
+        var rnd = new Random();
+        playOrder = playOrder.OrderBy(x => rnd.Next()).ToList();
+        playOrderPosition = 0;
     }
 }

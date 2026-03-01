@@ -74,8 +74,23 @@
 
         var success = await MusicService.AddMusicAsync(music);
 
-        message = success ? "Song added successfully!" : "Failed to add song.";
+        if (success)
+        {
+            message = "Song added successfully!";
+
+            // Clear the form for the next entry
+            music = new MusicDto();
+            durationString = string.Empty;
+
+            // Force UI refresh so fields visually clear
+            StateHasChanged();
+        }
+        else
+        {
+            message = "Failed to add song.";
+        }
     }
+
 
     private void GoBack()
     {
