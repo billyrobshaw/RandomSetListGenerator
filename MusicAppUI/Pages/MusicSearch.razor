@@ -7,33 +7,44 @@
 
 @if (showIntro)
 {
-    <div class="text-center mt-5" style="background-color: #fff7e6;">
-        <h3 class="fw-bold">🎵 Preparing your first song...</h3>
-        <p class="mt-3">Starting in @introCountdown seconds</p>
+    <div class="intro-wrapper">
+        <div class="intro-card text-center shadow-sm">
 
-        <p class="mt-4">
-            👉 <strong>First Song:</strong> @music[currentIndex].SongTitle<br />
-            <span class="text-muted">@music[currentIndex].Artist</span>
-        </p>
+            <h3 class="fw-bold mb-2">🎵 Preparing your first song…</h3>
+
+            <p class="text-muted mb-3">
+                Starting in <strong>@introCountdown</strong> seconds
+            </p>
+
+            <div class="mt-3">
+                <p class="mb-1">
+                    <strong>First Song:</strong> @music[currentIndex].SongTitle
+                </p>
+                <p class="text-muted mb-0">
+                    @music[currentIndex].Artist
+                </p>
+            </div>
+
+        </div>
     </div>
 }
 else if (music != null && music.Count > 0)
 {
-    <div class="page-wrapper" style="background-color: #fff7e6;">
+    <div class="page-wrapper">
         <div class="content-wrapper">
 
-            <div class="card shadow-sm text-center p-4">
+            <div class="music-card shadow-sm text-center">
 
-                <h2 class="fw-bold">@music[currentIndex].SongTitle</h2>
-                <h5 class="text-muted">@music[currentIndex].Artist</h5>
+                <h2>@music[currentIndex].SongTitle</h2>
+                <h5>@music[currentIndex].Artist</h5>
 
-                <div id="lyricsBox" class="lyrics-box mt-4 mx-auto">
+                <div id="lyricsBox" class="lyrics-box mt-4">
                     <pre class="lyrics-text">@music[currentIndex].Lyrics</pre>
                 </div>
 
                 @if (!string.IsNullOrWhiteSpace(music[currentIndex].Chords))
                 {
-                    <div class="chords-box mt-4 mx-auto">
+                    <div class="chords-box mx-auto">
                         <strong>Chords</strong>
                         <div class="mt-2">@music[currentIndex].Chords</div>
                     </div>
@@ -41,40 +52,29 @@ else if (music != null && music.Count > 0)
 
                 @if (showTransitionMessage)
                 {
-                    <p class="fw-bold text-primary mt-3">
-                        🎵 Get ready for the next song...
-                    </p>
+                    <p class="fw-bold text-primary mt-4">🎵 Get ready for the next song...</p>
                     <p class="text-muted">Next song starts in @transitionRemaining seconds</p>
 
                     @if (nextIndex != null)
                     {
-                        <p class="mt-3">
-                            👉 <strong>Coming Up:</strong> @music[nextIndex.Value].SongTitle
-                            <br />
+                        <p class="mt-2">
+                            👉 <strong>Coming Up:</strong> @music[nextIndex.Value].SongTitle<br />
                             <span class="text-muted">@music[nextIndex.Value].Artist</span>
                         </p>
                     }
                 }
 
-
             </div>
         </div>
 
-        <!-- FOOTER pinned to bottom -->
-        <div class="footer-info text-center mt-3">
-            <p class="small text-muted">
-                ⏱ Duration: @music[currentIndex].Duration.ToString(@"mm\:ss")
-            </p>
+        <div class="footer-info">
+            <p class="text-muted">⏱ Duration: @music[currentIndex].Duration.ToString(@"mm\:ss")</p>
             <p class="fw-bold text-danger">
                 ⏳ Time Remaining: @remainingTime.ToString(@"mm\:ss")
-                <button class="btn btn-primary mt-3" @onclick="SkipSong">
-                    ⏭ Skip
-                </button>
             </p>
-            
+            <button class="btn btn-primary" @onclick="SkipSong">⏭ Skip</button>
         </div>
     </div>
-
 }
 
 @code {
@@ -86,17 +86,14 @@ else if (music != null && music.Count > 0)
     private bool showIntro = true;
     private int introCountdown = 10;
 
-
     private CancellationTokenSource? cts;
-
-    // NEW: transition state
     private bool showTransitionMessage = false;
     private int transitionRemaining = 0;
 
+    private bool firstRenderComplete = false;
+
     protected override async Task OnInitializedAsync()
     {
-        Console.WriteLine("STEP 1: OnInitializedAsync started");
-
         music = await MusicService.GetAllMusic();
         loading = false;
 
@@ -105,7 +102,6 @@ else if (music != null && music.Count > 0)
             var rnd = new Random();
             currentIndex = rnd.Next(0, music.Count);
 
-            // Show intro message for 10 seconds
             introCountdown = 10;
             showIntro = true;
 
@@ -118,18 +114,21 @@ else if (music != null && music.Count > 0)
 
             showIntro = false;
 
-            // Start the normal loop
             cts = new CancellationTokenSource();
             _ = PlaySongsLoop(cts.Token);
         }
     }
 
-
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            firstRenderComplete = true;
+        }
+    }
 
     private async Task PlaySongsLoop(CancellationToken token)
     {
-        Console.WriteLine("STEP 3: Entered PlaySongsLoop");
-
         try
         {
             while (!token.IsCancellationRequested)
@@ -137,51 +136,48 @@ else if (music != null && music.Count > 0)
                 var song = music![currentIndex];
                 remainingTime = song.Duration;
 
-                Console.WriteLine($"STEP 3: Song '{song.SongTitle}' duration = {remainingTime}");
-
                 if (remainingTime.TotalSeconds <= 0)
                     remainingTime = TimeSpan.FromSeconds(1);
 
-                // SONG COUNTDOWN WITH SMOOTH AUTO-SCROLL
+                await Task.Delay(200);
+
+                if (firstRenderComplete)
+                    await JS.InvokeVoidAsync("resetLyricsScroll", "lyricsBox");
+
+                var scrollInfo = await JS.InvokeAsync<ScrollInfo>("getScrollInfo", "lyricsBox");
+
+                double scrollDistance = scrollInfo.scrollHeight - scrollInfo.clientHeight;
+                double totalSeconds = song.Duration.TotalSeconds;
+
+                if (totalSeconds < 1) totalSeconds = 1;
+
+                double pixelsPerSecond = scrollDistance / totalSeconds;
+                double pixelsPerTick = pixelsPerSecond * 0.125;
+
+                if (pixelsPerTick < 0.5)
+                    pixelsPerTick = 0.5;
+
                 while (remainingTime.TotalSeconds > 0 && !token.IsCancellationRequested)
                 {
-                    var total = song.Duration.TotalSeconds;
-                    if (total <= 0)
-                    {
-                        total = 1; // avoid divide by zero
-                    }
+                    if (firstRenderComplete)
+                        await JS.InvokeVoidAsync("scrollLyricsSmooth", "lyricsBox", pixelsPerTick);
 
-                    var elapsed = total - remainingTime.TotalSeconds;
-                    if (elapsed < 0) elapsed = 0;
-                    if (elapsed > total) elapsed = total;
-
-                    var progress = elapsed / total; // 0 → 1
-
-                    await JS.InvokeVoidAsync("scrollLyricsSmooth", "lyricsBox", 0.5);
-
-
-                    await Task.Delay(125, token); // 4× faster updates 
+                    await Task.Delay(125, token);
                     remainingTime -= TimeSpan.FromMilliseconds(125);
 
                     await InvokeAsync(StateHasChanged);
                 }
 
-                Console.WriteLine("STEP 3: Song finished");
-
-                // 15 SECOND TRANSITION
                 showTransitionMessage = true;
                 transitionRemaining = 15;
 
-                // NEW: pick next song early
                 var rnd = new Random();
                 nextIndex = rnd.Next(0, music.Count);
 
                 await InvokeAsync(StateHasChanged);
 
-
                 while (transitionRemaining > 0 && !token.IsCancellationRequested)
                 {
-                    Console.WriteLine($"Transition countdown: {transitionRemaining}");
                     await Task.Delay(1000, token);
                     transitionRemaining--;
                     await InvokeAsync(StateHasChanged);
@@ -192,21 +188,17 @@ else if (music != null && music.Count > 0)
                 currentIndex = nextIndex ?? new Random().Next(0, music.Count);
                 nextIndex = null;
 
-                // Reset scroll for the new song
-                await JS.InvokeVoidAsync("resetLyricsScroll", "lyricsBox", 0.5);
-
-                Console.WriteLine("STEP 3: Moving to next song");
+                if (firstRenderComplete)
+                    await JS.InvokeVoidAsync("resetLyricsScroll", "lyricsBox");
             }
         }
         catch (TaskCanceledException)
         {
-            Console.WriteLine("STEP 3: Timer cancelled");
         }
     }
 
     public void Dispose()
     {
-        Console.WriteLine("STEP 4: Component disposing, cancelling token");
         cts?.Cancel();
         cts?.Dispose();
     }
@@ -219,10 +211,9 @@ else if (music != null && music.Count > 0)
         var rnd = new Random();
         currentIndex = rnd.Next(0, music!.Count);
 
-        // Reset scroll
-        await JS.InvokeVoidAsync("resetLyricsScroll", "lyricsBox", 0.5);
+        if (firstRenderComplete)
+            await JS.InvokeVoidAsync("resetLyricsScroll", "lyricsBox");
 
-        // Reset timer for new song
         remainingTime = music[currentIndex].Duration;
 
         showTransitionMessage = false;
@@ -233,6 +224,9 @@ else if (music != null && music.Count > 0)
         await InvokeAsync(StateHasChanged);
     }
 
-
-
+    public class ScrollInfo
+    {
+        public double scrollHeight { get; set; }
+        public double clientHeight { get; set; }
+    }
 }

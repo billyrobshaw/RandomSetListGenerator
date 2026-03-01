@@ -1,17 +1,29 @@
-﻿window.resetLyricsScroll = function (elementId) {
-    const box = document.getElementById(elementId);
-    if (!box) return;
+﻿window.scrollLyricsSmooth = (id, pixels) => {
+    const el = document.getElementById(id);
+    if (!el) return;
 
-    box.scrollTop = 0;
+    el.scrollTo({
+        top: el.scrollTop + pixels,
+        behavior: "smooth"
+    });
 };
 
+window.resetLyricsScroll = (id) => {
+    const el = document.getElementById(id);
+    if (!el) return;
 
-window.scrollLyricsSmooth = function (elementId, amount) {
-    const box = document.getElementById(elementId);
-    if (!box) return;
-
-    box.scrollTop += amount;
+    el.scrollTo({
+        top: 0,
+        behavior: "auto"
+    });
 };
 
+window.getScrollInfo = (id) => {
+    const el = document.getElementById(id);
+    if (!el) return null;
 
-
+    return {
+        scrollHeight: el.scrollHeight,
+        clientHeight: el.clientHeight
+    };
+};
