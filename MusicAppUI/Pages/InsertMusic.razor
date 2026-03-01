@@ -1,0 +1,84 @@
+﻿@page "/insert-music"
+@using MusicApp.UI2.Models
+@using Microsoft.AspNetCore.Components.Forms
+@inject MusicService MusicService
+@inject NavigationManager Nav
+
+<div class="insert-wrapper">
+    <div class="insert-card shadow-lg">
+
+        <h2 class="text-center mb-4 fw-bold">Add New Song</h2>
+
+        <EditForm Model="@music" OnValidSubmit="HandleSubmit">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            <div class="form-section">
+                <label class="form-label">Artist</label>
+                <InputText class="form-control form-control-lg" @bind-Value="music.Artist" />
+            </div>
+
+            <div class="form-section">
+                <label class="form-label">Song Title</label>
+                <InputText class="form-control form-control-lg" @bind-Value="music.SongTitle" />
+            </div>
+
+            <div class="form-section">
+                <label class="form-label">Lyrics</label>
+                <InputTextArea class="form-control form-control-lg" @bind-Value="music.Lyrics" Rows="5" />
+            </div>
+
+            <div class="form-section">
+                <label class="form-label">Chords</label>
+                <InputTextArea class="form-control form-control-lg" @bind-Value="music.Chords" Rows="3" />
+            </div>
+
+            <div class="form-section">
+                <label class="form-label">Duration (hh:mm:ss)</label>
+                <InputText class="form-control form-control-lg" @bind-Value="durationString" />
+            </div>
+
+            <button class="btn btn-primary btn-lg w-100 mt-4" type="submit">
+                Add Song
+            </button>
+
+            @if (!string.IsNullOrWhiteSpace(message))
+            {
+                <div class="alert alert-info mt-3 text-center">@message</div>
+            }
+        </EditForm>
+
+        <button class="btn btn-outline-secondary btn-lg w-100 mt-3" @onclick="GoBack">
+            ⬅ Back to Home
+        </button>
+
+    </div>
+</div>
+
+
+
+@code {
+    private MusicDto music = new();
+    private string? durationString;
+    private string? message;
+
+    private async Task HandleSubmit()
+    {
+        if (!TimeSpan.TryParse(durationString, out var parsed))
+        {
+            message = "Invalid duration. Use hh:mm:ss";
+            return;
+        }
+
+        music.Duration = parsed;
+
+        var success = await MusicService.AddMusicAsync(music);
+
+        message = success ? "Song added successfully!" : "Failed to add song.";
+    }
+
+    private void GoBack()
+    {
+        Nav.NavigateTo("/");
+    }
+}

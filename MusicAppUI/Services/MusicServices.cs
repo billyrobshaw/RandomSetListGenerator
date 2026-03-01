@@ -1,4 +1,5 @@
-﻿using MusicApp.UI2.Models;
+﻿using Microsoft.AspNetCore.WebUtilities;
+using MusicApp.UI2.Models;
 using System.Net.Http.Json;
 
 namespace MusicApp.UI2.Services
@@ -25,5 +26,23 @@ namespace MusicApp.UI2.Services
             return await _http.GetFromJsonAsync<List<MusicDto>>($"api/music")
                    ?? new List<MusicDto>();
         }
+        public async Task<bool> AddMusicAsync(MusicDto music)
+        {
+            var query = new Dictionary<string, string?>
+            {
+                ["artist"] = music.Artist,
+                ["songTitle"] = music.SongTitle,
+                ["lyrics"] = music.Lyrics,
+                ["chords"] = music.Chords,
+                ["duration"] = music.Duration.ToString()
+            };
+
+            var url = QueryHelpers.AddQueryString("api/music", query);
+            var response = await _http.PostAsync(url, null);
+
+            return response.IsSuccessStatusCode;
+        }
+
+
     }
 }

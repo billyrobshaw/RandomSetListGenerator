@@ -1,99 +1,263 @@
+/* Global look */
 body {
-    background: linear-gradient(135deg, #ece9e6, #ffffff);
+    background: linear-gradient(135deg, #e9eef5, #ffffff);
     font-family: "Inter", "Segoe UI", sans-serif;
     color: #2b2b2b;
     margin: 0;
 }
 
-.intro-wrapper {
-    height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background: linear-gradient(135deg, #ece9e6, #ffffff);
-    padding: 0 20px;
-}
-
-.intro-card {
-    background: #ffffff;
-    padding: 2rem 2.5rem;
-    border-radius: 14px;
-    max-width: 500px;
-    width: 100%;
-    box-shadow: 0 6px 20px rgba(0,0,0,0.08);
-}
-
+/* Wrapper for main playback page */
 .page-wrapper {
     display: flex;
     flex-direction: column;
-    min-height: 100vh;
+    align-items: center;
+    padding: 10px 20px 40px; /* smaller top padding */
 }
 
+
+
+/* Centers the card */
 .content-wrapper {
-    flex: 1;
-    display: flex;
-    justify-content: center;
-    padding: 4px 10px;
+    width: 100%;
+    max-width: 820px; /* slightly smaller */
 }
 
+
+/* Main music card */
 .music-card {
     background: #ffffff;
-    border-radius: 14px;
-    padding: 1.2rem;
+    border-radius: 16px;
+    padding: 2rem;
     width: 100%;
-    max-width: 850px;
-    box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+    box-shadow: 0 8px 28px rgba(0,0,0,0.08);
+    border: 1px solid #e8e8e8;
+    animation: fadeIn 0.4s ease-out;
 }
 
-    .music-card h2 {
-        font-size: 2rem;
-        font-weight: 700;
-        margin-bottom: 0.2rem;
+/* Smooth fade-in animation */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
     }
 
-    .music-card h5 {
-        font-size: 1.15rem;
-        color: #6c757d;
-        margin-bottom: 1rem;
+    to {
+        opacity: 1;
+        transform: translateY(0);
     }
+}
 
+/* Titles */
+.music-card h2 {
+    font-size: 2.2rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.music-card h5 {
+    font-size: 1.2rem;
+    color: #666;
+}
+
+/* Lyrics box */
 .lyrics-box {
-    background: #fafafa;
-    border-left: 4px solid #0d6efd;
-    max-height: 52vh;
-    overflow-y: auto;
+    background: #f8f9fa;
+    border-radius: 12px;
     padding: 1rem;
-    border-radius: 10px;
-    margin-top: 0.8rem;
+    height: 420px; /* slightly smaller */
+    overflow-y: auto;
+    margin-top: 1.5rem;
+    border: 1px solid #e0e0e0;
+}
+
+.lyrics-box pre {
+    margin: 0;
+    padding: 0;
+    white-space: pre-wrap;
+    display: block;
 }
 
 .lyrics-text {
     white-space: pre-wrap;
-    font-family: "Courier New", monospace;
-    font-size: 1.1rem;
-    line-height: 1.7;
-    text-align: center;
-    color: #000000;
+    font-size: 1.05rem;
+    line-height: 1.55;
+    white-space: pre-wrap;
 }
 
+/* Chords box */
 .chords-box {
-    margin-top: 1.2rem;
     background: #fff;
-    padding: 0.9rem;
+    border-radius: 12px;
+    padding: 1rem;
+    margin-top: 1.5rem;
+    border: 1px solid #e0e0e0;
+    width: 90%;
+    max-width: 500px;
+}
+
+/* Footer info */
+.footer-info {
+    margin-top: 25px;
+    text-align: center;
+}
+
+.footer-info p {
+    margin: 4px 0;
+    font-size: 1.1rem;
+}
+.footer-buttons {
+    display: flex;
+    justify-content: center; /* or flex-end if you want them right aligned */
+    gap: 12px;
+    margin-top: 10px;
+}
+
+.footer-buttons .btn {
+    padding: 12px 20px;
+    font-size: 1.1rem;
     border-radius: 10px;
-    border: 1px solid #e3e3e3;
-    max-width: 450px;
+}
+
+
+/* Buttons */
+.btn-primary {
+    background: #0d6efd;
+    border: none;
+    padding: 12px 20px;
+    font-size: 1.1rem;
+    border-radius: 10px;
+}
+
+.btn-primary:hover {
+    background: #0b5ed7;
+}
+/* Center the form and reduce overall height */
+.insert-wrapper {
+    display: flex;
+    justify-content: center;
+    padding-top: 20px;
+    padding-bottom: 30px;
+    width: 100%;
+}
+
+/* Make the card slightly smaller but wider */
+.insert-card {
+    background: #ffffff;
+    border-radius: 18px;
+    padding: 2rem 2.5rem;
+    width: 100%;
+    max-width: 900px; /* wider but not huge */
+    border: 1px solid #e5e5e5;
+    box-shadow: 0 8px 28px rgba(0,0,0,0.08);
+}
+
+/* Center all form content */
+.insert-card form {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* centers all input areas */
+}
+
+/* Make each input area wider */
+.form-section {
+    width: 85%; /* controls input width */
+    margin-bottom: 1.2rem;
+}
+
+/* Labels */
+.form-label {
+    font-weight: 600;
+    margin-bottom: 6px;
+    display: block;
+    color: #333;
     font-size: 1.05rem;
 }
 
-.footer-info {
-    text-align: center;
-    padding: 6px 0 14px 0;
-    font-size: 1rem;
+/* Inputs */
+.form-control-lg {
+    width: 100%; /* ensures full width inside section */
+    padding: 12px 14px;
+    font-size: 1.05rem;
+    border-radius: 10px;
+    border: 1px solid #cfcfcf;
 }
 
-    .footer-info button {
-        margin-top: 6px;
-        font-size: 1.1rem;
-        padding: 10px 20px;
+/* Shorter textareas */
+textarea.form-control-lg {
+    min-height: 90px;
+}
+
+/* Center the intro on the page */
+.intro-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding-top: 60px;
+    padding-bottom: 40px;
+}
+
+/* Main intro card */
+.intro-card {
+    background: #ffffff;
+    padding: 2.5rem 3rem;
+    border-radius: 20px;
+    width: 100%;
+    max-width: 650px;
+    text-align: center;
+    border: 1px solid #e5e5e5;
+    box-shadow: 0 10px 35px rgba(0,0,0,0.08);
+    animation: fadeIn 0.4s ease-out;
+}
+
+/* Title */
+.intro-title {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    color: #1a1a1a;
+}
+
+/* Subtitle */
+.intro-subtitle {
+    font-size: 1.15rem;
+    color: #666;
+    margin-bottom: 1.5rem;
+}
+
+/* Song details */
+.intro-details {
+    margin-top: 1rem;
+}
+
+.intro-label {
+    font-size: 1.1rem;
+    margin-bottom: 0.3rem;
+}
+
+.intro-song {
+    font-size: 1.35rem;
+    font-weight: 600;
+    margin-bottom: 0.2rem;
+}
+
+.intro-artist {
+    font-size: 1.1rem;
+    color: #777;
+}
+
+/* Fade-in animation */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
     }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+
+

@@ -38,23 +38,18 @@ namespace MusicApp.API.Controllers
 
         [HttpPost]
         public async Task<IActionResult> AddMusicQuery(
-            [FromQuery] int id,
             [FromQuery] string artist,
             [FromQuery] string songTitle,
             [FromQuery] string? lyrics,
             [FromQuery] string? chords,
-            [FromQuery] TimeSpan? duration // "hh:mm:ss"
+            [FromQuery] TimeSpan? duration
         )
         {
             if (string.IsNullOrEmpty(artist) || string.IsNullOrEmpty(songTitle))
                 return BadRequest("Artist and SongTitle are required.");
 
-            //if (!string.IsNullOrEmpty(duration) && !TimeSpan.TryParse(duration, out _))
-            //    return BadRequest("Invalid duration format. Use hh:mm:ss");
-
             var music = new Music
             {
-                Id = id,
                 Artist = artist,
                 SongTitle = songTitle,
                 Lyrics = lyrics,
@@ -67,6 +62,7 @@ namespace MusicApp.API.Controllers
 
             return Ok(new { message = "Song added successfully!", id = music.Id });
         }
+
 
         [HttpGet("artist/{artist}")]
         public async Task<ActionResult<IEnumerable<MusicDto>>> GetArtist(string artist)
