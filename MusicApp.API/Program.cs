@@ -20,17 +20,30 @@ builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 builder.Services.AddSwaggerGen();
 
+// For development, allow CORS from localhost:3000 (React dev server)
 builder.Services.AddCors(options =>
 {
-    options.AddDefaultPolicy(policy =>
+    options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.AllowAnyOrigin()   // or restrict to "https://localhost:5002"
-              .AllowAnyMethod()
-              .AllowAnyHeader();
+        policy.AllowAnyOrigin()
+              .AllowAnyHeader()
+              .AllowAnyMethod();
     });
 });
 
-
+//For realease, change the IP address to your machine's local IP address and ensure the frontend is running on that IP and port
+//builder.Services.AddCors(options =>
+//{
+//    options.AddPolicy("AllowFrontend",
+//        policy => policy
+//            .AllowAnyHeader()
+//            .AllowAnyMethod()
+//            .WithOrigins(
+//                "http://localhost:3000",
+//                "http://192.168.0.164:3000"
+//            )
+//    );
+//});
 
 var app = builder.Build();
 
@@ -47,7 +60,9 @@ app.UseHttpsRedirection();
 
 app.UseAuthorization();
 
-app.UseCors();
+//app.UseCors();
+
+app.UseCors("AllowFrontend");
 
 app.MapControllers();
 

@@ -166,7 +166,7 @@
                 if (firstRenderComplete)
                     await JS.InvokeVoidAsync("resetLyricsScroll", "lyricsBox");
 
-                var scrollInfo = await JS.InvokeAsync<ScrollInfo>("getScrollInfo", "lyricsBox");
+                var scrollInfo = await JS.InvokeAsync<ScrollInfo>("getScrollInfo", "lyricsBox", 0.5);
 
                 double scrollDistance = scrollInfo.scrollHeight - scrollInfo.clientHeight;
                 double totalSeconds = song.Duration.TotalSeconds;
@@ -212,7 +212,7 @@
                 nextIndex = null;
 
                 if (firstRenderComplete)
-                    await JS.InvokeVoidAsync("resetLyricsScroll", "lyricsBox");
+                    await JS.InvokeVoidAsync("resetLyricsScroll", "lyricsBox", 0.5);
             }
         }
         catch (TaskCanceledException) { }
@@ -253,7 +253,7 @@
         nextIndex = null;
 
         if (firstRenderComplete)
-            await JS.InvokeVoidAsync("resetLyricsScroll", "lyricsBox");
+            await JS.InvokeVoidAsync("resetLyricsScroll", "lyricsBox", 0.5);
 
         remainingTime = music[currentIndex].Duration;
 

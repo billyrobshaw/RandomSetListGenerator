@@ -10,8 +10,21 @@ builder.RootComponents.Add<HeadOutlet>("head::after");
 
 
 // Register HttpClient and your service
+
+//When in Release
+//builder.Services.AddScoped(sp => new HttpClient
+//{
+//    BaseAddress = new Uri("http://192.168.0.164:5000/")
+//});
+
+//Change when in Debug
 builder.Services.AddScoped(sp =>
-    new HttpClient { BaseAddress = new Uri("https://localhost:7169/") }); // your API URL
+    new HttpClient
+    {
+        BaseAddress = new Uri("https://localhost:7169/")
+    }); // your API URL
+
+
 builder.Services.AddScoped<MusicService>();
 builder.Services.AddScoped<BlazorTimer>();
 
