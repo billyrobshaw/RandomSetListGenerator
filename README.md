@@ -8,6 +8,7 @@ This data will display on the web page and allow the person playing an instrumen
 
 All the different songs will be stored in a database and the aim is to randomise through these and them to display for the length of the song plus 20 seconds to allow a rest/effect changes.
 
+I have now successfully published this to my local network and made the website responsive so it looks clean on a mobile or tv.
 
 ****On Arrival****
 <img width="1907" height="952" alt="image" src="https://github.com/user-attachments/assets/bdf4a30b-bde7-4dca-9329-981431ffbd0d" />
