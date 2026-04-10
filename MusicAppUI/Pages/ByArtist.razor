@@ -1,0 +1,369 @@
+﻿@page "/play-by-artist"
+@using MusicApp.UI2.Models
+@using MusicApp.UI2.Services
+@inject MusicService MusicService
+@inject IJSRuntime JS
+@inject NavigationManager Nav
+@implements IDisposable
+
+<div class="page-layout">
+
+    @if (!artistSelected)
+    {
+        <div class="artist-input-wrapper pro">
+            <h2 class="title">Select an Artist</h2>
+
+            <input class="form-control artist-input"
+                   placeholder="Enter artist name..."
+                   @bind="artistInput" />
+
+            <button class="btn btn-primary play-btn" @onclick="LoadArtistSongs">
+                ▶ Play Songs
+            </button>
+        </div>
+
+    }
+    else if (isLoading)
+    {
+        <div class="loading-wrapper pro-loading">
+            <div class="spinner-border text-primary" role="status"></div>
+            <p class="loading-text">Searching for songs…</p>
+        </div>
+
+    }
+    else if (noSongsFound)
+    {
+        <div class="no-songs">
+            <h3>No songs found for '@artistInput'</h3>
+            <button class="btn btn-secondary" @onclick="ResetPage">Try Again</button>
+        </div>
+    }
+    else
+    {
+        <div class="queue-panel">
+            @foreach (var i in Enumerable.Range(0, playOrder.Count))
+            {
+                var index = playOrder[i];
+                var song = music[index];
+
+                <div class="queue-item @(i == playOrderPosition ? "current" : i < playOrderPosition ? "played" : "upcoming")">
+                    <strong>@song.SongTitle</strong><br />
+                    <span class="artist">@song.Artist</span>
+                </div>
+            }
+        </div>
+
+        <div class="main-content">
+
+            @if (showIntro)
+            {
+                <div class="intro-wrapper">
+                    <div class="intro-card">
+                        <h2 class="intro-title">Preparing your first song</h2>
+                        <p class="intro-subtitle">Starting in <strong>@introCountdown</strong> seconds</p>
+
+                        <div class="intro-details">
+                            <p class="intro-label"><strong>First Song:</strong></p>
+                            <p class="intro-song">@music[currentIndex].SongTitle</p>
+                            <p class="intro-artist">@music[currentIndex].Artist</p>
+                        </div>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="page-wrapper">
+                    <div class="content-wrapper">
+
+                        <div class="music-card shadow-sm text-center">
+
+                            <h2>@music[currentIndex].SongTitle</h2>
+                            <h5>@music[currentIndex].Artist</h5>
+
+                            <div id="lyricsBox" class="lyrics-box mt-4">
+                                <pre class="lyrics-text">@music[currentIndex].Lyrics</pre>
+                            </div>
+
+                            @if (!string.IsNullOrWhiteSpace(music[currentIndex].Chords))
+                            {
+                                <div class="chords-box mx-auto">
+                                    <strong>Chords</strong>
+                                    <div class="mt-2">@music[currentIndex].Chords</div>
+                                </div>
+                            }
+
+                            @if (showTransitionMessage)
+                            {
+                                <p class="fw-bold text-primary mt-4">🎵 Get ready for the next song...</p>
+                                <p class="text-muted">Next song starts in @transitionRemaining seconds</p>
+
+                                @if (nextIndex != null)
+                                {
+                                    <p class="mt-2">
+                                        👉 <strong>Coming Up:</strong> @music[nextIndex.Value].SongTitle<br />
+                                        <span class="text-muted">@music[nextIndex.Value].Artist</span>
+                                    </p>
+                                }
+                            }
+
+                        </div>
+                    </div>
+
+                    <div class="footer-info">
+                        <p class="text-muted">⏱ Duration: @music[currentIndex].Duration.ToString(@"mm\:ss")</p>
+                        <p class="fw-bold text-danger">⏳ Time Remaining: @remainingTime.ToString(@"mm\:ss")</p>
+
+                        <div class="footer-buttons">
+                            <button class="btn btn-primary" @onclick="GoToInsertPage">➕ Add New Song</button>
+                            <button class="btn btn-primary" @onclick="ResetPage">🔄 Change Artist</button>
+                            <button class="btn btn-primary" @onclick="SkipSong">⏭ Skip</button>
+                        </div>
+                    </div>
+
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    private string artistInput = "";
+    private bool artistSelected = false;
+    private bool isLoading = false;
+    private bool noSongsFound = false;
+
+    private List<MusicDto>? music;
+    private int currentIndex = 0;
+    private TimeSpan remainingTime;
+    private int? nextIndex = null;
+
+    private bool showIntro = false;
+    private int introCountdown = 10;
+
+    private List<int> playOrder = new();
+    private int playOrderPosition = 0;
+
+    private CancellationTokenSource? cts;
+    private bool showTransitionMessage = false;
+    private int transitionRemaining = 0;
+
+    private bool firstRenderComplete = false;
+
+    protected override void OnInitialized()
+    {
+        ResetPage();
+    }
+
+    private async Task LoadArtistSongs()
+    {
+        if (string.IsNullOrWhiteSpace(artistInput))
+            return;
+
+        artistSelected = true;
+        isLoading = true;
+        noSongsFound = false;
+
+        await InvokeAsync(StateHasChanged);
+
+        try
+        {
+            music = await MusicService.GetByArtist(artistInput);
+        }
+        catch (HttpRequestException ex)
+        {
+            // If API returns 404 → treat as no songs found
+            if (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                isLoading = false;
+                noSongsFound = true;
+                return;
+            }
+
+            // Any other error → also show no songs
+            isLoading = false;
+            noSongsFound = true;
+            return;
+        }
+
+        isLoading = false;
+
+        if (music == null || music.Count == 0)
+        {
+            noSongsFound = true;
+            return;
+        }
+
+        // Songs found → start player
+        GeneratePlayOrder();
+        currentIndex = playOrder[playOrderPosition];
+
+        showIntro = true;
+        introCountdown = 10;
+
+        while (introCountdown > 0)
+        {
+            await Task.Delay(1000);
+            introCountdown--;
+            await InvokeAsync(StateHasChanged);
+        }
+
+        showIntro = false;
+
+        cts = new CancellationTokenSource();
+        _ = PlaySongsLoop(cts.Token);
+    }
+
+
+    private void ResetPage()
+    {
+        cts?.Cancel();
+        artistSelected = false;
+        artistInput = "";
+        music = null;
+        noSongsFound = false;
+        isLoading = false;
+        showIntro = false;
+        nextIndex = null;
+        playOrder.Clear();
+        playOrderPosition = 0;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+            firstRenderComplete = true;
+    }
+
+    private async Task PlaySongsLoop(CancellationToken token)
+    {
+        try
+        {
+            while (!token.IsCancellationRequested)
+            {
+                var song = music![currentIndex];
+                remainingTime = song.Duration;
+
+                if (remainingTime.TotalSeconds <= 0)
+                    remainingTime = TimeSpan.FromSeconds(1);
+
+                await Task.Delay(200);
+
+                if (firstRenderComplete)
+                    await JS.InvokeVoidAsync("resetLyricsScroll", "lyricsBox");
+
+                var scrollInfo = await JS.InvokeAsync<ScrollInfo>("getScrollInfo", "lyricsBox", 0.5);
+
+                double scrollDistance = scrollInfo.scrollHeight - scrollInfo.clientHeight;
+                double totalSeconds = song.Duration.TotalSeconds;
+                if (totalSeconds < 1) totalSeconds = 1;
+
+                double pixelsPerSecond = scrollDistance / totalSeconds;
+                double pixelsPerTick = pixelsPerSecond * 0.125;
+                if (pixelsPerTick < 0.5)
+                    pixelsPerTick = 0.5;
+
+                while (remainingTime.TotalSeconds > 0 && !token.IsCancellationRequested)
+                {
+                    if (firstRenderComplete)
+                        await JS.InvokeVoidAsync("scrollLyricsSmooth", "lyricsBox", pixelsPerTick);
+
+                    await Task.Delay(125, token);
+                    remainingTime -= TimeSpan.FromMilliseconds(125);
+
+                    await InvokeAsync(StateHasChanged);
+                }
+
+                showTransitionMessage = true;
+                transitionRemaining = 15;
+
+                playOrderPosition++;
+                if (playOrderPosition >= playOrder.Count)
+                    GeneratePlayOrder();
+
+                nextIndex = playOrder[playOrderPosition];
+
+                await InvokeAsync(StateHasChanged);
+
+                while (transitionRemaining > 0 && !token.IsCancellationRequested)
+                {
+                    await Task.Delay(1000, token);
+                    transitionRemaining--;
+                    await InvokeAsync(StateHasChanged);
+                }
+
+                showTransitionMessage = false;
+
+                currentIndex = nextIndex.Value;
+                nextIndex = null;
+
+                if (firstRenderComplete)
+                    await JS.InvokeVoidAsync("resetLyricsScroll", "lyricsBox", 0.5);
+            }
+        }
+        catch (TaskCanceledException) { }
+    }
+
+    public void Dispose()
+    {
+        cts?.Cancel();
+        cts?.Dispose();
+    }
+
+    private async Task SkipSong()
+    {
+        cts?.Cancel();
+        cts?.Dispose();
+
+        playOrderPosition++;
+        if (playOrderPosition >= playOrder.Count)
+            GeneratePlayOrder();
+
+        nextIndex = playOrder[playOrderPosition];
+
+        showTransitionMessage = true;
+        transitionRemaining = 10;
+
+        await InvokeAsync(StateHasChanged);
+
+        while (transitionRemaining > 0)
+        {
+            await Task.Delay(1000);
+            transitionRemaining--;
+            await InvokeAsync(StateHasChanged);
+        }
+
+        showTransitionMessage = false;
+
+        currentIndex = nextIndex.Value;
+        nextIndex = null;
+
+        if (firstRenderComplete)
+            await JS.InvokeVoidAsync("resetLyricsScroll", "lyricsBox", 0.5);
+
+        remainingTime = music[currentIndex].Duration;
+
+        cts = new CancellationTokenSource();
+        _ = PlaySongsLoop(cts.Token);
+
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private void GoToInsertPage()
+    {
+        Nav.NavigateTo("/insert-music");
+    }
+
+    public class ScrollInfo
+    {
+        public double scrollHeight { get; set; }
+        public double clientHeight { get; set; }
+    }
+
+    private void GeneratePlayOrder()
+    {
+        playOrder = Enumerable.Range(0, music!.Count).ToList();
+        var rnd = new Random();
+        playOrder = playOrder.OrderBy(x => rnd.Next()).ToList();
+        playOrderPosition = 0;
+    }
+}

@@ -88,6 +88,7 @@
 
                     <div class="footer-buttons">
                         <button class="btn btn-primary" @onclick="GoToInsertPage">➕ Add New Song</button>
+                        <button class="btn btn-primary" @onclick="GoToPlayByArtist">➕ Play Songs By Artist</button>
                         <button class="btn btn-primary" @onclick="SkipSong">⏭ Skip</button>
                     </div>
                 </div>
@@ -266,6 +267,10 @@
     private void GoToInsertPage()
     {
         Nav.NavigateTo("/insert-music");
+    }
+    private void GoToPlayByArtist()
+    {
+        Nav.NavigateTo("/play-by-artist");
     }
 
     public class ScrollInfo
